@@ -34,6 +34,9 @@ pub struct CoinQuery {
     params: Vec<Arc<dyn ToSql>>,
 }
 
+// TODO get rid of this
+unsafe impl Send for CoinQuery {}
+
 impl CoinQuery {
     pub(crate) fn new(pool: Pool) -> Self {
         Self {
