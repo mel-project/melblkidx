@@ -11,6 +11,8 @@ pub struct BalanceTracker {
     cache: Mutex<BTreeMap<u64, CoinValue>>,
 }
 
+unsafe impl Sync for BalanceTracker {}
+
 impl BalanceTracker {
     /// Returns how much the balance changed between the start (not inclusive) and the end (inclusive)
     fn balance_diff(&self, start: u64, end: u64) -> i128 {
