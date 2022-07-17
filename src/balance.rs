@@ -94,7 +94,10 @@ impl BalanceTracker {
             let diff = self.balance_diff(prev_height, height);
             prev_balance + (diff as u128).into()
         };
-        self.cache.lock().insert(height, balance);
+        if balance != prev_balance && balance != next_balance {
+            self.cache.lock().insert(height, balance);
+            // only insert when we have "complete" info here
+        }
         Some(balance)
     }
 }
