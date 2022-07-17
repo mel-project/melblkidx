@@ -28,7 +28,7 @@ pub struct CoinSpendInfo {
 /// A half-built query on the coins table
 #[derive(Clone)]
 pub struct CoinQuery {
-    pool: Pool,
+    pub(crate) pool: Pool,
 
     filters: Vec<String>,
     params: Vec<Arc<dyn ToSql>>,

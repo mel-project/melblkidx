@@ -118,6 +118,13 @@ impl Indexer {
         .optional()
         .unwrap()
     }
+
+    /// Get the max height
+    pub fn max_height(&self) -> u64 {
+        let conn = self.pool.get_conn();
+        conn.query_row("select max(height) from headvars", params![], |r| r.get(0))
+            .unwrap()
+    }
 }
 
 /// Miscellenous info about height
