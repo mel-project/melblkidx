@@ -93,12 +93,12 @@ impl CoinQuery {
     }
 
     /// Adds a constraint on the covhash.
-    pub fn additional_data(self, covhash: Address) -> Self {
+    pub fn covhash(self, covhash: Address) -> Self {
         self.add_eq_filter("covhash", covhash.to_string())
     }
 
     /// Adds a constraint on the additional data.
-    pub fn covhash(self, additional_data: &[u8]) -> Self {
+    pub fn additional_data(self, additional_data: &[u8]) -> Self {
         self.add_eq_filter("additional_data", additional_data.to_vec())
     }
 
