@@ -1,12 +1,8 @@
-use std::{
-    collections::HashMap,
-    time::{Duration, Instant},
-};
+use std::time::{Duration, Instant};
 
-use itertools::Itertools;
 use melblkidx::Indexer;
 use themelio_nodeprot::ValClient;
-use themelio_structs::{Address, CoinValue, Denom, NetID};
+use themelio_structs::{Denom, NetID};
 
 fn main() {
     env_logger::init();

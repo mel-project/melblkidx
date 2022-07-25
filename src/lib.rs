@@ -15,7 +15,7 @@ use pool::Pool;
 use rusqlite::{params, OptionalExtension};
 use smol::Task;
 use themelio_nodeprot::ValClient;
-use themelio_structs::{BlockHeight, CoinID, StakeDoc, TxKind};
+use themelio_structs::{BlockHeight, CoinID, StakeDoc, TxHash, TxKind};
 
 /// An asynchronous Melodeon block indexer.
 pub struct Indexer {
@@ -94,11 +94,11 @@ impl Indexer {
     }
 
     /// Get miscellaneous info about a height
-    pub fn height_info(&self, height: u64) -> Option<HeightInfo> {
+    pub fn height_info(&self, height: BlockHeight) -> Option<HeightInfo> {
         let conn = self.pool.get_conn();
         conn.query_row(
             "select * from headvars where height = $1",
-            params![height],
+            params![height.0],
             |row| {
                 let height = BlockHeight(row.get(0)?);
                 let blkhash: String = row.get(1)?;
@@ -120,10 +120,34 @@ impl Indexer {
     }
 
     /// Get the max height
-    pub fn max_height(&self) -> u64 {
+    pub fn max_height(&self) -> BlockHeight {
         let conn = self.pool.get_conn();
-        conn.query_row("select max(height) from headvars", params![], |r| r.get(0))
-            .unwrap()
+        conn.query_row("select max(height) from headvars", params![], |r| {
+            Ok(BlockHeight(r.get(0)?))
+        })
+        .unwrap()
+    }
+
+    /// Search for a transaction by hash. Returns the block in which it can be found.
+    pub fn txhash_to_height(&self, txhash: TxHash) -> Option<BlockHeight> {
+        // TODO a better strategy?
+        self.query_coins()
+            .spend_txhash(txhash)
+            .iter()
+            .map(|c| c.spend_info.unwrap().spend_height)
+            .next()
+    }
+
+    /// Search for a block by hash.
+    pub fn blkhash_to_height(&self, blkhash: HashVal) -> Option<BlockHeight> {
+        let conn = self.pool.get_conn();
+        conn.query_row(
+            "select height from headvars where blkhash = $1",
+            params![blkhash.to_string()],
+            |row| Ok(BlockHeight(row.get(0)?)),
+        )
+        .optional()
+        .unwrap()
     }
 }
 
