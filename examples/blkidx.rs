@@ -1,14 +1,34 @@
 use std::time::{Duration, Instant};
 
 use melblkidx::Indexer;
-use themelio_nodeprot::ValClient;
+use melnet2::{wire::tcp::TcpBackhaul, Backhaul};
+use themelio_nodeprot::{NodeRpcClient, ValClient};
 use themelio_structs::{Denom, NetID};
 
 fn main() {
-    env_logger::init();
-    let client = ValClient::new(NetID::Mainnet, "127.0.0.1:11814".parse().unwrap());
-    client.trust(themelio_bootstrap::checkpoint_height(NetID::Mainnet).unwrap());
-    let indexer = Indexer::new("./test.db", client).unwrap();
+    smolscale::block_on(async move {
+        env_logger::init();
+        let backhaul = TcpBackhaul::new();
+
+        let rpc_client = NodeRpcClient(backhaul.connect("127.0.0.1:11814".into()).await.unwrap());
+        let client = ValClient::new(NetID::Mainnet, rpc_client);
+        client.trust(themelio_bootstrap::checkpoint_height(NetID::Mainnet).unwrap());
+        let indexer = Indexer::new("./test.db", client).unwrap();
+        loop {
+            std::thread::sleep(Duration::from_secs(5));
+            // compute balance
+            let start = Instant::now();
+            let sum: f64 = indexer
+                .query_coins()
+                .unspent()
+                .denom(Denom::Mel)
+                .iter()
+                .map(|d| d.coin_data.value.0 as f64 / 1_000_000.0)
+                .sum();
+            eprintln!("{} MEL in circulation {:?}", sum, start.elapsed());
+        }
+    });
+
     // println!("covhash,value");
     // let mut sum: HashMap<Address, CoinValue> = HashMap::new();
     // for item in indexer
@@ -46,17 +66,4 @@ fn main() {
     //             .count()
     //     );
     // }
-    loop {
-        std::thread::sleep(Duration::from_secs(5));
-        // compute balance
-        let start = Instant::now();
-        let sum: f64 = indexer
-            .query_coins()
-            .unspent()
-            .denom(Denom::Mel)
-            .iter()
-            .map(|d| d.coin_data.value.0 as f64 / 1_000_000.0)
-            .sum();
-        eprintln!("{} MEL in circulation {:?}", sum, start.elapsed());
-    }
 }

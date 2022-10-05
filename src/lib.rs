@@ -222,7 +222,7 @@ async fn indexer_loop_once(pool: Pool, client: ValClient) -> anyhow::Result<()> 
         let stakes = if last_stakes != Some(blk.header.stakes_hash) {
             last_stakes = Some(blk.header.stakes_hash);
             // TODO: validate?
-            Some(snap.get_raw().get_stakers_raw(height).await?)
+            snap.get_raw().get_stakers_raw(height).await?
         } else {
             None
         };
