@@ -24,8 +24,8 @@ smol = "1.2.5"
 smolscale = "0.3.41"
 stdcode = "0.1.10"
 tap = "1.0.1"
-# themelio-bootstrap = "0.6.1"
-themelio-bootstrap = { path = "../themelio-bootstrap" }
+ themelio-bootstrap = "0.7"
+#themelio-bootstrap = { path = "../themelio-bootstrap" }
 themelio-nodeprot = "0.12.0"
 themelio-structs = "0.2.10"
 tmelcrypt = "0.2.4"
