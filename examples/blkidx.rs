@@ -10,7 +10,8 @@ fn main() {
         env_logger::init();
         let backhaul = TcpBackhaul::new();
 
-        let rpc_client = NodeRpcClient(backhaul.connect("127.0.0.1:11814".into()).await.unwrap());
+        let rpc_client =
+            NodeRpcClient(backhaul.connect("146.59.84.29:41814".into()).await.unwrap());
         let client = ValClient::new(NetID::Mainnet, rpc_client);
         client.trust(themelio_bootstrap::checkpoint_height(NetID::Mainnet).unwrap());
         let indexer = Indexer::new("./test.db", client).unwrap();

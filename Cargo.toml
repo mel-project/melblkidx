@@ -24,10 +24,10 @@ smol = "1.2.5"
 smolscale = "0.3.41"
 stdcode = "0.1.10"
 tap = "1.0.1"
- themelio-bootstrap = "0.7"
-#themelio-bootstrap = { path = "../themelio-bootstrap" }
-themelio-nodeprot = "0.12.0"
-themelio-structs = "0.2.10"
+themelio-bootstrap = { git = "https://github.com/themeliolabs/themelio-bootstrap", branch = "use-themelio-structs-0.3-beta" }
+themelio-nodeprot = { git = "https://github.com/themeliolabs/themelio-nodeprot", branch = "use-themelio-structs-0.3-beta" }
+
+themelio-structs= "0.3.0-beta.5"
 tmelcrypt = "0.2.4"
 
 [dev-dependencies]

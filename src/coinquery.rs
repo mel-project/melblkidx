@@ -89,7 +89,7 @@ impl CoinQuery {
 
     /// Adds a constraint on the denom.
     pub fn denom(self, denom: Denom) -> Self {
-        self.add_eq_filter("denom", denom.to_bytes())
+        self.add_eq_filter("denom", denom.to_bytes().to_vec())
     }
 
     /// Adds a constraint on the covhash.
@@ -182,7 +182,7 @@ impl CoinQuery {
                             covhash,
                             value,
                             denom,
-                            additional_data,
+                            additional_data: additional_data.into(),
                         },
                         spend_info: spend_txhash.map(|spend_txhash| CoinSpendInfo {
                             spend_txhash,

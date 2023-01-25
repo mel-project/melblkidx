@@ -238,9 +238,9 @@ async fn indexer_loop_once(pool: Pool, client: ValClient) -> anyhow::Result<()> 
                     new_coin.index,
                     height.0,
                     new_coindata.value.0.to_be_bytes().to_vec(),
-                    new_coindata.denom.to_bytes(),
+                    new_coindata.denom.to_bytes().to_vec(),
                     new_coindata.covhash.to_string(),
-                    new_coindata.additional_data
+                    new_coindata.additional_data.to_vec()
                 ],
             )?;
         }
@@ -291,13 +291,10 @@ async fn indexer_loop_once(pool: Pool, client: ValClient) -> anyhow::Result<()> 
                     txn.hash_nosigs().to_string(),
                     u8::from(txn.kind),
                     txn.fee.0.to_be_bytes(),
-                    serde_json::to_string(
-                        &txn.covenants.iter().map(|s| hex::encode(&s)).collect_vec()
-                    )
-                    .unwrap(),
-                    txn.data.clone().tap_mut(|d| { d.truncate(1024) }), // only keep first kilobyte
-                    serde_json::to_string(&txn.sigs.iter().map(|s| hex::encode(&s)).collect_vec())
-                        .unwrap()
+                    serde_json::to_string(&txn.covenants.iter().map(hex::encode).collect_vec())
+                        .unwrap(),
+                    txn.data.clone().tap_mut(|d| { d.truncate(1024) }).to_vec(), // only keep first kilobyte
+                    serde_json::to_string(&txn.sigs.iter().map(hex::encode).collect_vec()).unwrap()
                 ],
             )?;
         }
