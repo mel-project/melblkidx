@@ -63,10 +63,6 @@ impl Indexer {
             [],
         )?;
         db.execute(
-            r"create index if not exists coins_spender on coins(spend_txhash)",
-            [],
-        )?;
-        db.execute(
             r"create index if not exists coins_createheight on coins(create_height)",
             [],
         )?;
