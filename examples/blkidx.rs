@@ -2,7 +2,8 @@ use std::time::{Duration, Instant};
 
 use melblkidx::Indexer;
 use melnet2::{wire::tcp::TcpBackhaul, Backhaul};
-use themelio_nodeprot::{NodeRpcClient, ValClient};
+
+use melprot::{Client, NodeRpcClient};
 use themelio_structs::{Denom, NetID};
 
 fn main() {
@@ -12,7 +13,7 @@ fn main() {
 
         let rpc_client =
             NodeRpcClient(backhaul.connect("146.59.84.29:41814".into()).await.unwrap());
-        let client = ValClient::new(NetID::Mainnet, rpc_client);
+        let client = Client::new(NetID::Mainnet, rpc_client);
         client.trust(themelio_bootstrap::checkpoint_height(NetID::Mainnet).unwrap());
         let indexer = Indexer::new("./test.db", client).unwrap();
         loop {

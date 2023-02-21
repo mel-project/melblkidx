@@ -11,10 +11,10 @@ mod pool;
 use std::{collections::HashMap, path::Path, time::Duration};
 
 use itertools::Itertools;
+use melprot::Client;
 use pool::Pool;
 use rusqlite::{params, OptionalExtension};
 use smol::Task;
-use themelio_nodeprot::ValClient;
 use themelio_structs::{BlockHeight, CoinID, StakeDoc, TxHash, TxKind};
 
 /// An asynchronous Melodeon block indexer.
@@ -26,8 +26,8 @@ pub struct Indexer {
 }
 
 impl Indexer {
-    /// Creates a new indexer based on the given path to an SQLite database and ValClient.
-    pub fn new(path: impl AsRef<Path>, client: ValClient) -> rusqlite::Result<Self> {
+    /// Creates a new indexer based on the given path to an SQLite database and Client.
+    pub fn new(path: impl AsRef<Path>, client: Client) -> rusqlite::Result<Self> {
         let pool = Pool::open(path)?;
         let db = pool.get_conn();
         db.execute(r"create table if not exists coins (create_txhash not null, create_index not null, create_height not null, spend_txhash, spend_index, spend_height, value not null, denom not null, covhash not null, additional_data not null,
@@ -160,7 +160,7 @@ pub struct HeightInfo {
     pub dosc_speed: u128,
 }
 
-async fn indexer_loop(pool: Pool, client: ValClient) {
+async fn indexer_loop(pool: Pool, client: Client) {
     loop {
         if let Err(err) = indexer_loop_once(pool.clone(), client.clone()).await {
             log::warn!("indexing failed with {:?}, restarting", err)
@@ -169,7 +169,7 @@ async fn indexer_loop(pool: Pool, client: ValClient) {
     }
 }
 
-async fn indexer_loop_once(pool: Pool, client: ValClient) -> anyhow::Result<()> {
+async fn indexer_loop_once(pool: Pool, client: Client) -> anyhow::Result<()> {
     // first, we find out the highest height we have
     let our_highest: u64 =
         pool.get_conn()
@@ -181,21 +181,6 @@ async fn indexer_loop_once(pool: Pool, client: ValClient) -> anyhow::Result<()> 
     let their_highest = highest_snap.current_header().height;
     let mut last_stakes = None;
     for height in ((our_highest + 1)..=their_highest.0).map(BlockHeight) {
-        // // "preload" a bunch, horrible hack
-        // {
-        //     let vv = (0..256)
-        //         .map(|i| {
-        //             let highest_snap = highest_snap.clone();
-        //             smolscale::spawn(async move {
-        //                 highest_snap.get_older(height + BlockHeight(i)).await
-        //             })
-        //         })
-        //         .collect_vec();
-        //     for v in vv {
-        //         let _ = v.await;
-        //     }
-        // }
-
         let snap = highest_snap.get_older(height).await?;
         let blk = snap.current_block().await?;
         // get all the coins produced

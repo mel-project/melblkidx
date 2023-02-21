@@ -1,6 +1,6 @@
 # Block indexer for Melscan (and possibly more)
 
-The block indexer pulls blocks from the network one by one using a `ValClient` and indexes them.
+The block indexer pulls blocks from the network one by one using a `Client` and indexes them.
 
 ## SQLite schema overview
 
