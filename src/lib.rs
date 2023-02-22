@@ -118,9 +118,11 @@ impl Indexer {
     /// Get the max height
     pub fn max_height(&self) -> BlockHeight {
         let conn = self.pool.get_conn();
-        conn.query_row("select max(height) from headvars", params![], |r| {
-            Ok(BlockHeight(r.get(0)?))
-        })
+        conn.query_row(
+            "select coalesce(max(height), 0) from headvars",
+            params![],
+            |r| Ok(BlockHeight(r.get(0)?)),
+        )
         .unwrap()
     }
 
