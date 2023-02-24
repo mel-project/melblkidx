@@ -72,7 +72,7 @@ impl CoinQuery {
         self.filters
             .push("(spend_txhash is null or spend_txhash > ?)".into());
         self.params.push(Arc::new(height.0));
-        self
+        self.create_height_range(..=height.0)
     }
 
     /// Adds a constraint on the spending txhash.
