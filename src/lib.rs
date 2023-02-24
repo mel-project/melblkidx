@@ -175,7 +175,7 @@ async fn indexer_loop_once(pool: Pool, client: Client) -> anyhow::Result<()> {
                 d.get(0)
             })?;
     // then find their highest
-    let highest_snap = client.snapshot().await?;
+    let highest_snap = client.latest_snapshot().await?;
     let their_highest = highest_snap.current_header().height;
     let mut last_stakes = None;
     for height in ((our_highest + 1)..=their_highest.0).map(BlockHeight) {
