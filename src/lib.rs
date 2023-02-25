@@ -12,10 +12,10 @@ use std::{collections::HashMap, path::Path, time::Duration};
 
 use itertools::Itertools;
 use melprot::Client;
+use melstructs::{BlockHeight, CoinID, StakeDoc, TxHash, TxKind};
 use pool::Pool;
 use rusqlite::{params, OptionalExtension};
 use smol::Task;
-use themelio_structs::{BlockHeight, CoinID, StakeDoc, TxHash, TxKind};
 
 /// An asynchronous Melodeon block indexer.
 pub struct Indexer {

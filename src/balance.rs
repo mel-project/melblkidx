@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
+use melstructs::CoinValue;
 use parking_lot::Mutex;
-use themelio_structs::CoinValue;
 
 use crate::CoinQuery;
 

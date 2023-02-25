@@ -16,6 +16,9 @@ hex = "0.4.3"
 itertools = "0.10.5"
 
 log = "0.4.17"
+melbootstrap = "0.8.0"
+melprot = "0.13.0"
+melstructs = "0.3.2"
 once_cell = "1.15.0"
 parking_lot = "0.12.1"
 rusqlite = "0.28.0"
@@ -24,9 +27,9 @@ smol = "1.2.5"
 smolscale = "0.3.41"
 stdcode = "0.1.10"
 tap = "1.0.1"
-themelio-bootstrap = { git = "https://github.com/themeliolabs/themelio-bootstrap", branch = "use-themelio-structs-0.3-beta" }
-melprot = { git = "https://github.com/themeliolabs/themelio-nodeprot", branch = "use-themelio-structs-0.3-beta" }
-themelio-structs= "0.3.0-beta.5"
+# themelio-bootstrap = { git = "https://github.com/themeliolabs/themelio-bootstrap", branch = "use-themelio-structs-0.3-beta" }
+# melprot = { git = "https://github.com/themeliolabs/themelio-nodeprot", branch = "use-themelio-structs-0.3-beta" }
+# themelio-structs= "0.3.0-beta.5"
 tmelcrypt = "0.2.4"
 
 [dev-dependencies]

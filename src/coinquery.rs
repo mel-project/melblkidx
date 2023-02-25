@@ -2,8 +2,8 @@ use std::{ops::RangeBounds, sync::Arc};
 
 use genawaiter::sync::Gen;
 use itertools::Itertools;
+use melstructs::{Address, BlockHeight, CoinData, CoinValue, Denom, TxHash};
 use rusqlite::ToSql;
-use themelio_structs::{Address, BlockHeight, CoinData, CoinValue, Denom, TxHash};
 
 use crate::{pool::Pool, BalanceTracker};
 
@@ -164,6 +164,7 @@ impl CoinQuery {
             let conn = self.pool.get_conn();
             let mut stmt = conn.prepare_cached(&query).unwrap();
             let params: Vec<&dyn ToSql> = self.params.iter().map(|f| f.as_ref()).collect_vec();
+
             let i = stmt
                 .query_map(&params[..], |row| {
                     let create_txhash: String = row.get(0)?;
