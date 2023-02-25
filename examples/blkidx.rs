@@ -4,7 +4,7 @@ use melblkidx::Indexer;
 use melnet2::{wire::tcp::TcpBackhaul, Backhaul};
 
 use melprot::{Client, NodeRpcClient};
-use themelio_structs::{Denom, NetID};
+use melstructs::{Denom, NetID};
 
 fn main() {
     smolscale::block_on(async move {
@@ -14,7 +14,7 @@ fn main() {
         let rpc_client =
             NodeRpcClient(backhaul.connect("146.59.84.29:41814".into()).await.unwrap());
         let client = Client::new(NetID::Mainnet, rpc_client);
-        client.trust(themelio_bootstrap::checkpoint_height(NetID::Mainnet).unwrap());
+        client.trust(melbootstrap::checkpoint_height(NetID::Mainnet).unwrap());
         let indexer = Indexer::new("./test.db", client).unwrap();
         loop {
             std::thread::sleep(Duration::from_secs(5));
