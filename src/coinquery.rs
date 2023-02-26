@@ -70,7 +70,7 @@ impl CoinQuery {
     /// Adds a constraint that filters only for coins unspent by a certain height.
     pub fn unspent_by(mut self, height: BlockHeight) -> Self {
         self.filters
-            .push("(spend_txhash is null or spend_txhash > ?)".into());
+            .push("(spend_txhash is null or spend_height > ?)".into());
         self.params.push(Arc::new(height.0));
         self.create_height_range(..=height.0)
     }
