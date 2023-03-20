@@ -191,12 +191,44 @@ async fn indexer_loop_once(pool: Pool, client: Client) -> anyhow::Result<()> {
             for (i, output) in tx.outputs.iter().enumerate() {
                 new_coins.insert(CoinID::new(tx.hash_nosigs(), i as _), output.clone());
             }
+
+            // Melswap transactions (Swap, LiqDeposit, LiqWithdrawal) have special rules.
+            // Swap: the *first output* of the transaction gets *transmuted* to something else, iff it hasn't been spent within the same block. e.g. a MEL output would magically turn into SYM, inside the coins mapping (but not in the outputs field of the transaction!)
+            // LiqDeposit: the FIRST TWO outputs of the transaction *magically disappear* iff it wasn't spent within the same block. It is replaced by one output, of the liquidity-token type. So outputs[0] turns into the liquidity token, and outputs[1] just poofs into thin air, as if it were spent by another transaction.
+            // LiqWithdraw: the first output of the transaction magically turns into the left-hand token of the wallet, and the second output magically into the right-hand token.
+
+            // We won't bother replicating the rules here. Instead, if we have melswap transactions that have outputs that aren't spent within this height, we just query the server to obtain the actual content of the outputs.
+
+            // We also may change this in the future, since esp. LiqDeposit and LiqWithdraw really break the consistency of the utxo graph.
+
             if tx.kind == TxKind::Swap {
                 let id = CoinID::new(tx.hash_nosigs(), 0);
                 if let Some(coin) = snap.get_coin(id).await? {
                     new_coins.insert(id, coin.coin_data);
                 }
             }
+
+            if tx.kind == TxKind::LiqDeposit {
+                // check 0 and 1
+                for output in 0..=1 {
+                    let id = CoinID::new(tx.hash_nosigs(), output);
+                    if let Some(coin) = snap.get_coin(id).await? {
+                        new_coins.insert(id, coin.coin_data);
+                    }
+                }
+            }
+
+            if tx.kind == TxKind::LiqWithdraw {
+                // check 0 and 1
+                for output in 0..(tx.outputs.len() as u8 + 1) {
+                    // 1 extra output inserted, lol
+                    let id = CoinID::new(tx.hash_nosigs(), output);
+                    if let Some(coin) = snap.get_coin(id).await? {
+                        new_coins.insert(id, coin.coin_data);
+                    }
+                }
+            }
+
             for (i, input) in tx.inputs.iter().enumerate() {
                 spent_coins.insert(*input, (tx.hash_nosigs(), i));
             }
