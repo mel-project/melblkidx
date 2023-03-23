@@ -203,6 +203,7 @@ async fn indexer_loop_once(pool: Pool, client: Client) -> anyhow::Result<()> {
 
             if tx.kind == TxKind::Swap {
                 let id = CoinID::new(tx.hash_nosigs(), 0);
+                new_coins.remove(&id);
                 if let Some(coin) = snap.get_coin(id).await? {
                     new_coins.insert(id, coin.coin_data);
                 }
@@ -212,6 +213,7 @@ async fn indexer_loop_once(pool: Pool, client: Client) -> anyhow::Result<()> {
                 // check 0 and 1
                 for output in 0..=1 {
                     let id = CoinID::new(tx.hash_nosigs(), output);
+                    new_coins.remove(&id);
                     if let Some(coin) = snap.get_coin(id).await? {
                         new_coins.insert(id, coin.coin_data);
                     }
@@ -223,6 +225,7 @@ async fn indexer_loop_once(pool: Pool, client: Client) -> anyhow::Result<()> {
                 for output in 0..(tx.outputs.len() as u8 + 1) {
                     // 1 extra output inserted, lol
                     let id = CoinID::new(tx.hash_nosigs(), output);
+                    new_coins.remove(&id);
                     if let Some(coin) = snap.get_coin(id).await? {
                         new_coins.insert(id, coin.coin_data);
                     }
