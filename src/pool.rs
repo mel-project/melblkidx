@@ -27,18 +27,28 @@ impl Pool {
 
         let toret = Self { queue, path };
         {
-            let toret = toret.clone();
-            std::thread::Builder::new()
-                .name("blkidx-optimize".into())
-                .spawn(move || loop {
-                    log::info!("optimizing database...");
-                    let start = Instant::now();
-                    let conn = toret.get_conn();
-                    conn.execute("PRAGMA optimize;", []).unwrap();
-                    log::info!("optimized in {:?}", start.elapsed());
-                    std::thread::sleep(Duration::from_secs(3600));
-                })
-                .unwrap();
+            loop {
+                let toret = toret.clone();
+                match std::thread::Builder::new()
+                    .name("blkidx-optimize".into())
+                    .spawn(move || loop {
+                        log::info!("optimizing database...");
+                        let start = Instant::now();
+                        let conn = toret.get_conn();
+                        let _ = conn
+                            .execute("PRAGMA optimize;", [])
+                            .map_err(|e| format!("error while optimizing database {:?}", e));
+                        log::info!("optimized in {:?}", start.elapsed());
+                        std::thread::sleep(Duration::from_secs(3600));
+                    }) {
+                    Ok(_) => {
+                        log::info!("successfully optimized database");
+                        break;
+                    }
+                    Err(e) => log::warn!("failed to optimize database, trying again: {:?}", e),
+                }
+                std::thread::sleep(Duration::from_secs(1));
+            }
         }
         Ok(toret)
     }
