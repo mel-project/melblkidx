@@ -7,6 +7,8 @@ use std::{
 
 use concurrent_queue::ConcurrentQueue;
 
+use crate::repeat_fallible;
+
 /// A pool of SQLite connections
 #[derive(Clone)]
 pub struct Pool {
@@ -57,11 +59,12 @@ impl Pool {
     pub fn get_conn(&self) -> impl DerefMut<Target = rusqlite::Connection> {
         let conn = self.queue.pop().unwrap_or_else(|_| {
             let flags: rusqlite::OpenFlags = rusqlite::OpenFlags::default();
-            let db = rusqlite::Connection::open_with_flags(&self.path, flags).unwrap();
-            db.query_row("PRAGMA journal_mode = WAL;", [], |f| f.get::<_, String>(0))
-                .unwrap();
-            db.execute("PRAGMA synchronous = NORMAL;", []).unwrap();
-            db
+            repeat_fallible(|| {
+                let db = rusqlite::Connection::open_with_flags(&self.path, flags)?;
+                db.query_row("PRAGMA journal_mode = WAL;", [], |f| f.get::<_, String>(0))?;
+                db.execute("PRAGMA synchronous = NORMAL;", [])?;
+                anyhow::Ok(db)
+            })
         });
         WrappedConnection {
             queue: self.queue.clone(),

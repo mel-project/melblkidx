@@ -17,6 +17,16 @@ use pool::Pool;
 use rusqlite::{params, OptionalExtension};
 use smol::Task;
 
+// Repeats something until it stops failing
+fn repeat_fallible<T, E: std::fmt::Debug>(mut clos: impl FnMut() -> Result<T, E>) -> T {
+    loop {
+        match clos() {
+            Ok(val) => return val,
+            Err(err) => log::warn!("retrying failed: {:?}", err),
+        }
+    }
+}
+
 /// An asynchronous Melodeon block indexer.
 pub struct Indexer {
     /// At the moment, just a single connection, letting us stop worrying about retrying txx etc
@@ -91,39 +101,41 @@ impl Indexer {
 
     /// Get miscellaneous info about a height
     pub fn height_info(&self, height: BlockHeight) -> Option<HeightInfo> {
-        let conn = self.pool.get_conn();
-        conn.query_row(
-            "select * from headvars where height = $1",
-            params![height.0],
-            |row| {
-                let height = BlockHeight(row.get(0)?);
-                let blkhash: String = row.get(1)?;
-                let blkhash: HashVal = blkhash.parse().unwrap();
-                let fee_pool = u128::from_be_bytes(row.get(2)?);
-                let fee_multiplier = u128::from_be_bytes(row.get(3)?);
-                let dosc_speed = u128::from_be_bytes(row.get(4)?);
-                Ok(HeightInfo {
-                    height,
-                    blkhash,
-                    fee_pool,
-                    fee_multiplier,
-                    dosc_speed,
-                })
-            },
-        )
-        .optional()
-        .unwrap()
+        repeat_fallible(|| {
+            let conn = self.pool.get_conn();
+            conn.query_row(
+                "select * from headvars where height = $1",
+                params![height.0],
+                |row| {
+                    let height = BlockHeight(row.get(0)?);
+                    let blkhash: String = row.get(1)?;
+                    let blkhash: HashVal = blkhash.parse().unwrap();
+                    let fee_pool = u128::from_be_bytes(row.get(2)?);
+                    let fee_multiplier = u128::from_be_bytes(row.get(3)?);
+                    let dosc_speed = u128::from_be_bytes(row.get(4)?);
+                    Ok(HeightInfo {
+                        height,
+                        blkhash,
+                        fee_pool,
+                        fee_multiplier,
+                        dosc_speed,
+                    })
+                },
+            )
+            .optional()
+        })
     }
 
     /// Get the max height
     pub fn max_height(&self) -> BlockHeight {
-        let conn = self.pool.get_conn();
-        conn.query_row(
-            "select coalesce(max(height), 0) from headvars",
-            params![],
-            |r| Ok(BlockHeight(r.get(0)?)),
-        )
-        .unwrap()
+        repeat_fallible(|| {
+            let conn = self.pool.get_conn();
+            conn.query_row(
+                "select coalesce(max(height), 0) from headvars",
+                params![],
+                |r| Ok(BlockHeight(r.get(0)?)),
+            )
+        })
     }
 
     /// Search for a transaction by hash. Returns the block in which it can be found.
@@ -138,14 +150,15 @@ impl Indexer {
 
     /// Search for a block by hash.
     pub fn blkhash_to_height(&self, blkhash: HashVal) -> Option<BlockHeight> {
-        let conn = self.pool.get_conn();
-        conn.query_row(
-            "select height from headvars where blkhash = $1",
-            params![blkhash.to_string()],
-            |row| Ok(BlockHeight(row.get(0)?)),
-        )
-        .optional()
-        .unwrap()
+        repeat_fallible(|| {
+            let conn = self.pool.get_conn();
+            conn.query_row(
+                "select height from headvars where blkhash = $1",
+                params![blkhash.to_string()],
+                |row| Ok(BlockHeight(row.get(0)?)),
+            )
+            .optional()
+        })
     }
 }
 

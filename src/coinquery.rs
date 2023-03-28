@@ -5,7 +5,7 @@ use itertools::Itertools;
 use melstructs::{Address, BlockHeight, CoinData, CoinValue, Denom, TxHash};
 use rusqlite::ToSql;
 
-use crate::{pool::Pool, BalanceTracker};
+use crate::{pool::Pool, repeat_fallible, BalanceTracker};
 
 /// Info about a coin.
 #[derive(Clone, Debug, PartialEq, PartialOrd, Ord, Eq)]
@@ -162,7 +162,7 @@ impl CoinQuery {
             );
             log::debug!("iter query: {:?}", query);
             let conn = self.pool.get_conn();
-            let mut stmt = conn.prepare_cached(&query).unwrap();
+            let mut stmt = repeat_fallible(|| conn.prepare_cached(&query));
             let params: Vec<&dyn ToSql> = self.params.iter().map(|f| f.as_ref()).collect_vec();
 
             let i = stmt
